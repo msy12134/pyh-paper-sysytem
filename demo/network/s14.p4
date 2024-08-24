@@ -2,7 +2,7 @@
 #include <v1model.p4>
 
 const bit<9>  CPU_PORT=5;
-const bit<32> controller_ipv4dst=0x0A00010F;
+const bit<32> controller_ipv4dst=0x0A00050F;
 const bit<16> TYPE_IPV4=0x0800;
 const bit<8> IP_PROTO_REQUEST=150;
 const bit<8> IP_PROTO_RESPONSE=151;
@@ -95,7 +95,9 @@ control MyIngress(inout headers hdr,
         mark_to_drop(standard_metadata);
     }
 
-    action ipv4_forward(bit<9> port){
+    action ipv4_forward(bit<48> dst_ethernet ,bit<9> port){
+        hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr=dst_ethernet;
         standard_metadata.egress_spec = port;
     }
 

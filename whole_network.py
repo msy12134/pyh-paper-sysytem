@@ -32,9 +32,29 @@ net = NetworkAPI()
 net.setLogLevel('info')
 net.enableCli()
 
+switch=[]
+host=[]
 for i in range(0,10):
     for j in range(0,12):
         net.addP4Switch('s0'+numbers1[i]+numbers2[j])
+        switch.append('s0'+numbers1[i]+numbers2[j])
+
+# for i in range(1,121):
+#     hostname="h"+str(i)
+#     net.addHost(hostname)
+#     host.append(hostname)
+
+# for i in list(zip(switch,host)):
+#     net.addLink(i[0],i[1])
+for i in switch:
+    hostname="h"+i[1:]
+    host.append(hostname)
+    net.addHost(hostname)
+for i in list(zip(switch,host)):
+    net.addLink(i[0],i[1])
+
+
+
 
 for index,row in result.iterrows():
     satellite = row['satellite']
@@ -44,7 +64,7 @@ for index,row in result.iterrows():
     net.setDelay(satellite,satellite2,Delay)
 
     
-net.mixed()
+net.l2()
 
 net.enablePcapDumpAll()
 net.enableLogAll()

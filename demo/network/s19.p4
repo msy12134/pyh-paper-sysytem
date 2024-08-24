@@ -1,9 +1,11 @@
 #include <core.p4>
 #include <v1model.p4>
+
+const bit<9>  CPU_PORT=4;
+const bit<32> controller_ipv4dst=0x0A00050F;
 const bit<16> TYPE_IPV4=0x0800;
 const bit<8> IP_PROTO_REQUEST=150;
 const bit<8> IP_PROTO_RESPONSE=151;
-const bit<9> CPU_PORT=6;
 header ethernet_t {
     bit<48> dstAddr;
     bit<48> srcAddr;
@@ -46,7 +48,6 @@ struct headers{
 struct metadata {
     
 }
-
 parser MyParser(
             packet_in pkt,
             out headers hdr,
@@ -94,10 +95,26 @@ control MyIngress(inout headers hdr,
         mark_to_drop(standard_metadata);
     }
 
-    action ipv4_forward(bit<48> dst_ethernet,bit<9> port){
+    action ipv4_forward(bit<48> dst_ethernet, bit<9> port){
         hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr=dst_ethernet;
         standard_metadata.egress_spec = port;
+    }
+
+    action set_deviceid_in_request(bit<8> deviceid){
+        hdr.request.deviceid=deviceid;
+    }
+
+
+    table set_deviceid{
+        key = {
+           hdr.ethernet.ether_type: exact;       
+        }
+        actions = {
+            set_deviceid_in_request;
+            NoAction;
+        }
+        default_action = NoAction();
     }
 
     table ipv4_lpm{
@@ -112,12 +129,59 @@ control MyIngress(inout headers hdr,
         default_action = drop;
     }
 
-    apply{
-        if(hdr.ipv4.protocol!=150){
-            ipv4_lpm.apply();
-        }else if(hdr.ipv4.protocol==150){
-            standard_metadata.egress_spec=CPU_PORT;
+    table ipv4_dst_memory{
+        key={
+            hdr.ipv4.dst_addr: exact;
         }
+        actions={
+            ipv4_forward;
+            drop;
+        }
+        size = 1024;
+        default_action = drop;
+    }
+
+
+    table if_the_deviceid_hit{
+        key={
+            hdr.response.deviceid: exact;
+        }
+        actions={
+            ipv4_forward;
+            drop;
+        }
+        size=1024;
+        default_action=drop;
+    }
+
+    apply{
+        bool use_ipv4_lpm;
+        use_ipv4_lpm=false;
+       if(ipv4_dst_memory.apply().hit){//这张表的用处就是单纯来查看这个数据包的目的地址是否是已经记录的地址
+            if(hdr.ipv4.protocol!=151 && hdr.ipv4.protocol!=150){
+                use_ipv4_lpm=true;   //只是记录在的普通数据包，那就转发
+            }else{
+                if(hdr.ipv4.protocol==150){
+                    use_ipv4_lpm=true;
+                }else if(hdr.ipv4.protocol==151){
+                    if(if_the_deviceid_hit.apply().hit){
+                        standard_metadata.egress_spec=CPU_PORT;
+                    }
+                    else{
+                        use_ipv4_lpm=true;
+                    }
+                }
+            }
+       }else{
+        hdr.request.setValid();
+        set_deviceid.apply();
+        hdr.request.dst_addr=hdr.ipv4.dst_addr;
+        hdr.ipv4.dst_addr=controller_ipv4dst;
+        use_ipv4_lpm=true;
+       }
+       if (use_ipv4_lpm){
+        ipv4_lpm.apply();
+       }
     }
 }
 
