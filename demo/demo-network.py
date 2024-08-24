@@ -5,40 +5,32 @@ net = NetworkAPI()
 net.setLogLevel('info')
 net.enableCli()
 
-
-net.addP4Switch('s11')
-net.addP4Switch('s12')
-net.addP4Switch('s13')
-net.addP4Switch('s14')
-net.addP4Switch('s15')
-net.addP4Switch('s16')
-net.addP4Switch('s17')
-net.addP4Switch('s18')
-net.addP4Switch('s19')
-
-net.setP4Source('s11','demo-simple-switch.p4')
-net.setP4Source('s12','demo-simple-switch.p4')
-net.setP4Source('s13','demo-simple-switch.p4')
-net.setP4Source('s14','demo-simple-switch.p4')
-net.setP4Source('s15','demo-controller-switch.p4')
-net.setP4Source('s16','demo-simple-switch.p4')
-net.setP4Source('s17','demo-simple-switch.p4')
-net.setP4Source('s18','demo-simple-switch.p4')
-net.setP4Source('s19','demo-simple-switch.p4')
-
+switch_list=['s11','s12','s13','s14','s15','s16','s17','s18','s19']
+for i in switch_list:
+    net.addP4Switch(i)
+host_list=['h11','h12','h13','h14','h15','h16','h17','h18','h19']
+for i in host_list:
+    net.addHost(i)
+for i in switch_list:
+    if i!='s15':
+        net.setP4Source(i,'demo-controller-switch.p4')
+    else:
+        net.setP4Source(i,'demo-simple-switch.p4')
 net.addLink('s11','s12')
 net.addLink('s12','s13')
 net.addLink('s14','s15')
 net.addLink('s15','s16')
 net.addLink('s17','s18')
 net.addLink('s18','s19')
-
 net.addLink('s11','s14')
 net.addLink('s14','s17')
 net.addLink('s12','s15')
 net.addLink('s15','s18')
 net.addLink('s13','s16')
 net.addLink('s16','s19')
+zipped=zip(switch_list,host_list)
+for i in zipped:
+    net.addLink(i[0],i[1])
 
 net.enableCpuPortAll()
 
