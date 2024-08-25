@@ -34,6 +34,7 @@ header response_t{
     bit<7> deviceid;
     bit<32> dst_addr;
     bit<9> port;
+    bit<48> dst_port_mac;
 }
 
 struct headers{
