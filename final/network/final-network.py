@@ -39,13 +39,7 @@ for i in range(0,10):
         net.addP4Switch('s0'+numbers1[i]+numbers2[j])
         switch.append('s0'+numbers1[i]+numbers2[j])
 
-# for i in range(1,121):
-#     hostname="h"+str(i)
-#     net.addHost(hostname)
-#     host.append(hostname)
 
-# for i in list(zip(switch,host)):
-#     net.addLink(i[0],i[1])
 for i in switch:
     hostname="h"+i[1:]
     host.append(hostname)
@@ -53,8 +47,11 @@ for i in switch:
 for i in list(zip(switch,host)):
     net.addLink(i[0],i[1])
 
-
-
+net.setP4SourceAll('simple-switch.p4')
+net.setP4Source("s00309",'controller-switch.p4')
+net.setP4Source("s00303",'controller-switch.p4')
+net.setP4Source("s00803",'controller-switch.p4')
+net.setP4Source("s00809",'controller-switch.p4')
 
 for index,row in result.iterrows():
     satellite = row['satellite']
@@ -62,8 +59,7 @@ for index,row in result.iterrows():
     Delay= row['distance']/300000*1000
     net.addLink(satellite,satellite2)
     net.setDelay(satellite,satellite2,Delay)
-
-    
+net.enableCpuPortAll()
 net.l2()
 
 net.enablePcapDumpAll()
