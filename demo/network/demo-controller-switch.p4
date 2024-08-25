@@ -3,7 +3,7 @@
 const bit<16> TYPE_IPV4=0x0800;
 const bit<8> IP_PROTO_REQUEST=150;
 const bit<8> IP_PROTO_RESPONSE=151;
-const bit<9> CPU_PORT=6;
+
 header ethernet_t {
     bit<48> dstAddr;
     bit<48> srcAddr;
@@ -100,6 +100,21 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = port;
     }
 
+     action set_cpu_port(bit<9> CPU_PORT){
+        standard_metadata.egress_spec=CPU_PORT;
+    }
+
+    table set_cpu_port_for_this_packet{
+        key={
+            hdr.ethernet.ether_type: exact;
+        }
+        actions={
+            set_cpu_port;
+            NoAction;
+        }
+        default_action = NoAction();
+    }
+
     table ipv4_lpm{
         key={
             hdr.ipv4.dst_addr: exact;
@@ -116,7 +131,7 @@ control MyIngress(inout headers hdr,
         if(hdr.ipv4.protocol!=150){
             ipv4_lpm.apply();
         }else if(hdr.ipv4.protocol==150){
-            standard_metadata.egress_spec=CPU_PORT;
+            set_cpu_port_for_this_packet.apply();
         }
     }
 }

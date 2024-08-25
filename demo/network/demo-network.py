@@ -12,10 +12,8 @@ host_list=['h11','h12','h13','h14','h15','h16','h17','h18','h19']
 for i in host_list:
     net.addHost(i)
 #每个交换机设置相应p4程序
+net.setP4SourceAll('demo-simple-switch.p4')
 net.setP4Source("s15",'demo-controller-switch.p4')
-for i in ['s11','s12','s13','s14','s16','s17','s18','s19']:
-    filename=i+".p4"
-    net.setP4Source(i,filename)
 #设置连接
 net.addLink('s11','s12')
 net.addLink('s12','s13')

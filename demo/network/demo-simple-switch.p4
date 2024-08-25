@@ -1,7 +1,6 @@
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<9>  CPU_PORT=5;
 const bit<32> controller_ipv4dst=0x0A00050F;
 const bit<16> TYPE_IPV4=0x0800;
 const bit<8> IP_PROTO_REQUEST=150;
@@ -95,7 +94,7 @@ control MyIngress(inout headers hdr,
         mark_to_drop(standard_metadata);
     }
 
-    action ipv4_forward(bit<48> dst_ethernet ,bit<9> port){
+    action ipv4_forward(bit<48> dst_ethernet, bit<9> port){
         hdr.ethernet.srcAddr=hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr=dst_ethernet;
         standard_metadata.egress_spec = port;
@@ -105,6 +104,35 @@ control MyIngress(inout headers hdr,
         hdr.request.deviceid=deviceid;
     }
 
+    action set_cpu_port(bit<9> CPU_PORT){
+        standard_metadata.egress_spec=CPU_PORT;
+    }
+
+    action set_packet_ipv4dst_to_controllerip(bit<32> controller_ipv4){
+        hdr.ipv4.dst_addr=controller_ipv4;
+    }
+
+    table table_set_packet_ipv4dst_to_controllerip{
+        key={
+            hdr.ethernet.ether_type: exact;
+        }
+        actions={
+            set_packet_ipv4dst_to_controllerip;
+            NoAction;
+        }
+        default_action = NoAction();
+    }
+
+    table set_cpu_port_for_this_packet{
+        key={
+            hdr.ethernet.ether_type: exact;
+        }
+        actions={
+            set_cpu_port;
+            NoAction;
+        }
+        default_action = NoAction();
+    }
 
     table set_deviceid{
         key = {
@@ -165,7 +193,8 @@ control MyIngress(inout headers hdr,
                     use_ipv4_lpm=true;
                 }else if(hdr.ipv4.protocol==151){
                     if(if_the_deviceid_hit.apply().hit){
-                        standard_metadata.egress_spec=CPU_PORT;
+                        // standard_metadata.egress_spec=CPU_PORT;
+                        set_cpu_port_for_this_packet.apply();
                     }
                     else{
                         use_ipv4_lpm=true;
@@ -176,7 +205,7 @@ control MyIngress(inout headers hdr,
         hdr.request.setValid();
         set_deviceid.apply();
         hdr.request.dst_addr=hdr.ipv4.dst_addr;
-        hdr.ipv4.dst_addr=controller_ipv4dst;
+        table_set_packet_ipv4dst_to_controllerip.apply();
         use_ipv4_lpm=true;
        }
        if (use_ipv4_lpm){
