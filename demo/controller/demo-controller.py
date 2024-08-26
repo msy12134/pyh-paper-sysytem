@@ -1,7 +1,5 @@
 from p4utils.utils.helper import load_topo
 from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
-
-
 #为每一个交换机添加一个控制器
 def place_controller_for_every_switch(topo):
     """为拓扑中的每个交换机设置一个关联的控制器.
@@ -65,9 +63,51 @@ def make_every_switch_knows_its_CPU_PORT(topo,dict):
     for i in dict:
         dict[i].table_add('set_cpu_port_for_this_packet','set_cpu_port',["0x0800"],[str(dict_switchname_to_cpuport[i])])
 
+
+def make_every_switch_knows_its_controller_ipv4(controller_ipv4,controller_dict):
+    """使得每个交换机都配置查找域内controller的流表项（每个交换机只有一条）.
+
+    Args:
+        controller_ipv4(str)：域内控制器的ipv4地址，例如 '10.0.5.15'
+        controller_dict(dict): place_controller_for_every_switch方法的返回对象
+    
+    Returns:
+        None: 
+    """
+    for i in controller_dict:
+        controller_dict[i].table_add('table_set_packet_ipv4dst_to_controllerip','set_packet_ipv4dst_to_controllerip',["0x0800"],[controller_ipv4])
+
+
+def make_every_switch_have_its_own_deviceID(controller_dict):
+    """使得每个交换机都配置对应的deviceID信息.
+
+    Args:
+        controller_dict(dict): place_controller_for_every_switch方法的返回对象
+    
+    Returns:
+        dict: 字典的键是交换机的名字，对应的值是每个交换机的deviceID 
+    """
+    deviceID=1
+    switchname_to_deveiceID_dict={}
+    for i in controller_dict:
+        result=controller_dict[i].table_add('set_deviceid','set_deviceid_in_request',["0x0800"],[str(deviceID)])
+        controller_dict[i].table_add('if_the_deviceid_hit','ipv4_forward',[str(deviceID)],['00:00:00:00:00:00',"255"])
+        if type(result) is int:
+            switchname_to_deveiceID_dict[i]=deviceID
+            deviceID+=1
+        else:
+            pass
+    return switchname_to_deveiceID_dict
+
+
+
 if __name__=='__main__':
     topo = load_topo('/home/mao/Desktop/systerm-code/demo/network/topology.json')
     controller_dict=place_controller_for_every_switch(topo)
-    make_every_switch_knows_its_CPU_PORT(topo,controller_dict)
-    implement_ping_between_two_terminals("h11","h19",controller_dict,topo)
+    # make_every_switch_knows_its_CPU_PORT(topo,controller_dict)
+    # implement_ping_between_two_terminals("h11","h19",controller_dict,topo)
+    # make_every_switch_knows_its_controller_ipv4('10.0.5.15',controller_dict)
+    switch_to_deviceID_dict= make_every_switch_have_its_own_deviceID(controller_dict)
+    print(switch_to_deviceID_dict)
+    
 

@@ -32,10 +32,11 @@ header request_t{
 }
 
 header response_t{
-    bit<7> deviceid;
+    bit<8> deviceid;
     bit<32> dst_addr;
     bit<9> port;
     bit<48> dst_port_mac;
+    bit<7> padding;
 }
 
 struct headers{
@@ -206,6 +207,7 @@ control MyIngress(inout headers hdr,
         hdr.request.setValid();
         set_deviceid.apply();
         hdr.request.dst_addr=hdr.ipv4.dst_addr;
+        hdr.ipv4.protocol=150;
         table_set_packet_ipv4dst_to_controllerip.apply();
         use_ipv4_lpm=true;
        }
