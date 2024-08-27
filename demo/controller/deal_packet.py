@@ -36,9 +36,9 @@ def make_a_response_packet(deviceid,dst_addr,port,dst_port_mac,ipv4):
     """控制交换机控制平面构造response数据包发送给对应普通交换机.
 
     Args:
-        deviceid(str): response包目的交换机的deviceid
+        deviceid(int): response包目的交换机的deviceid
         dst_addr(str): response包的response头部的dst_addr
-        port(str): response包的response头部的port
+        port(int): response包的response头部的port
         dst_port_mac(str): response包的response头部的dst_port_mac
         ipv4(str): response包的ipv4头部中的dst_addr
     
