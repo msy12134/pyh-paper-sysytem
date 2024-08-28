@@ -1,6 +1,7 @@
 from p4utils.utils.helper import load_topo
 from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
 from p4utils.utils.topology import NetworkGraph
+from demo_controller import mycontroller 
 #为每一个交换机添加一个控制器
 def place_controller_for_every_switch(topo:NetworkGraph):
     """为拓扑中的每个交换机设置一个关联的控制器.
@@ -121,5 +122,11 @@ if __name__=='__main__':
     make_every_switch_knows_its_controller_ipv4(topo.get_host_ip("h15"),controller_dict)
     switch_to_deviceID_dict= make_every_switch_have_its_own_deviceID(controller_dict)
     print(switch_to_deviceID_dict)
+
+    print("-------------各台交换机流表初始化完毕------------")
+    for i in controller_dict:
+        sniff_port_name=i+"-cpu-eth1"
+        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict,topo).start_receiving_cpu_packet()
+
     
 

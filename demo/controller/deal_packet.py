@@ -1,5 +1,6 @@
 from header_definition import *
 from scapy.packet import Raw,Packet
+
 def deal_packet_for_simple_switch(packet:Packet):
     """普通交换机解析域内控制器发过来的response包.
 
@@ -9,11 +10,10 @@ def deal_packet_for_simple_switch(packet:Packet):
     Returns:
         dict: 从response包中解析出来的信息
     """
-    response_header=response_t(bytes(packet[Raw]))
-    deviceid=response_header.deviceid
-    dst_addr=response_header.dst_addr
-    port=response_header.port
-    dst_port_mac=response_header.dst_port_mac
+    deviceid=packet[response_t].deviceid
+    dst_addr=packet[response_t].dst_addr
+    port=packet[response_t].port
+    dst_port_mac=packet[response_t].dst_port_mac
     return  {"deviceid":deviceid,"dst_addr":dst_addr,"port":port,"dst_port_mac":dst_port_mac}
 
 
@@ -26,9 +26,8 @@ def deal_packet_for_controller_switch(packet:Packet):
     Returns:
         dict: 从request包中解析出来的信息
     """
-    request_header=request_t(bytes(packet[Raw]))
-    deviceid=request_header.deviceid
-    dst_addr=request_header.dst_addr
+    deviceid=packet[request_t].deviceid
+    dst_addr=packet[request_t].dst_addr
     return {"deviceid": deviceid,"dst_addr":dst_addr}
 
 
@@ -45,8 +44,10 @@ def make_a_response_packet(deviceid:int,dst_addr:str,port:int,dst_port_mac:str,i
     Returns:
         packet: 打包好的完整response包
     """
-    packet=Ether()/IP(dst=ipv4,proto=151)/\
-    response_t(deviceid=deviceid,dst_addr=dst_addr,port=port,dst_port_mac=dst_port_mac)
+    mac_address_int_form=int(dst_port_mac.replace(":",""),16)
+    
+    packet=Ether(type=0x0800)/IP(dst=ipv4,proto=151)/\
+    response_t(deviceid=deviceid,dst_addr=dst_addr,port=port,dst_port_mac=mac_address_int_form)
     return packet
 
 
