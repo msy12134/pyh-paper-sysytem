@@ -1,10 +1,12 @@
-from scapy.all import sniff
+from scapy.all import sniff,Packet
 import threading
 import deal_packet
 from scapy.layers.inet import IP
 from scapy.all import sendp
+from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
+from p4utils.utils.topology import NetworkGraph
 class mycontroller:
-    def __init__(self,sniff_port,controller,deviceid_switchname_dict,topo):
+    def __init__(self,sniff_port:str,controller:SimpleSwitchThriftAPI,deviceid_switchname_dict:dict,topo:NetworkGraph):
         self.sniff_port=sniff_port
         self.controller=controller
         self.deviceid_switchname_dict=deviceid_switchname_dict
@@ -18,7 +20,7 @@ class mycontroller:
     def __sniff_packet(self):
         sniff(iface=self.sniff_packet,prn=self.__packet_deal)
 
-    def __packet_deal(self,packet):
+    def __packet_deal(self,packet:Packet):
         if packet[IP].proto==151:  #普通交换机收到response数据包直接插表
             dict=deal_packet.deal_packet_for_simple_switch(packet)
             self.controller.table_add("ipv4_lpm",'ipv4_forward',[str(dict["dst_addr"])],[str(dict["dst_port_mac"]),str(dict["port"])])

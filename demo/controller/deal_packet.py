@@ -1,6 +1,6 @@
 from header_definition import *
-from scapy.packet import Raw
-def deal_packet_for_simple_switch(packet):
+from scapy.packet import Raw,Packet
+def deal_packet_for_simple_switch(packet:Packet):
     """普通交换机解析域内控制器发过来的response包.
 
     Args:
@@ -17,7 +17,7 @@ def deal_packet_for_simple_switch(packet):
     return  {"deviceid":deviceid,"dst_addr":dst_addr,"port":port,"dst_port_mac":dst_port_mac}
 
 
-def deal_packet_for_controller_switch(packet):
+def deal_packet_for_controller_switch(packet:Packet):
     """控制交换机解析发过来的request包.
 
     Args:
@@ -32,7 +32,7 @@ def deal_packet_for_controller_switch(packet):
     return {"deviceid": deviceid,"dst_addr":dst_addr}
 
 
-def make_a_response_packet(deviceid,dst_addr,port,dst_port_mac,ipv4):
+def make_a_response_packet(deviceid:int,dst_addr:str,port:int,dst_port_mac:str,ipv4:str):
     """控制交换机控制平面构造response数据包发送给对应普通交换机.
 
     Args:
