@@ -14,11 +14,9 @@ def place_controller_for_every_switch(topo:NetworkGraph):
     """
     switch_name_list=list(topo.get_p4switches().keys())
     switch_thrift_port_list=[topo.get_thrift_port(i) for i in switch_name_list]
-    print(switch_thrift_port_list)
     controller_dict={}
     for i in list(zip(switch_name_list,switch_thrift_port_list)):
         controller_dict[i[0]]=SimpleSwitchThriftAPI(int(i[1]))
-        print(type(controller_dict[i[0]]))
     return controller_dict
     
 
@@ -109,24 +107,35 @@ def make_every_switch_have_its_own_deviceID(controller_dict:dict):
     return switchname_to_deveiceID_dict
 
 
+def get_controller_domain(x_from:str,x_to:str,y_from:str,y_to:str):
+    """.
 
-if __name__=='__main__':
-    topo = load_topo('/home/mao/Desktop/systerm-code/final/network/topology.json')
-    controller_dict=place_controller_for_every_switch(topo)
-    print(f"交换机控制器如下：{controller_dict}")
-    make_every_switch_knows_its_CPU_PORT(topo,controller_dict)
-    simple_switch_connect_host_list=[x for x in list(topo.get_hosts().keys()) if x!='h00309']
-    list=[(x,y) for x in ["h00309"] for y in simple_switch_connect_host_list]
-    for i in list:
-        implement_ping_between_two_terminals(i[0],i[1],controller_dict,topo)
-    make_every_switch_knows_its_controller_ipv4(topo.get_host_ip("h00309"),controller_dict)
-    switch_to_deviceID_dict= make_every_switch_have_its_own_deviceID(controller_dict)
-    print(switch_to_deviceID_dict)
+    Args:
+        
+    Returns:
+        list[str]: 字典的键是交换机的名字，对应的值是每个交换机的deviceID 
+    """
+    domain=['s0'+str(x).zfill(2)+str(y).zfill(2) for x in range(int(x_from),int(x_to)+1) for y in range(int(y_from),int(y_to)+1)]
+    return domain
+# if __name__=='__main__':
+#     topo = load_topo('/home/mao/Desktop/systerm-code/final/network/topology.json')
+#     controller_dict=place_controller_for_every_switch(topo)
+#     print(f"交换机控制器如下：{controller_dict}")
+#     make_every_switch_knows_its_CPU_PORT(topo,controller_dict)
+#     simple_switch_connect_host_list=[x for x in list(topo.get_hosts().keys()) if x!='h00309']
+#     list=[(x,y) for x in ["h00309"] for y in simple_switch_connect_host_list]
+#     for i in list:
+#         implement_ping_between_two_terminals(i[0],i[1],controller_dict,topo)
+#     make_every_switch_knows_its_controller_ipv4(topo.get_host_ip("h00309"),controller_dict)
+#     switch_to_deviceID_dict= make_every_switch_have_its_own_deviceID(controller_dict)
+#     print(switch_to_deviceID_dict)
 
-    print("-------------各台交换机流表初始化完毕------------")
-    for i in controller_dict:
-        sniff_port_name=i+"-cpu-eth1"
-        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict,topo).start_receiving_cpu_packet()
+#     print("-------------各台交换机流表初始化完毕------------")
+
+
+#     for i in controller_dict:
+#         sniff_port_name=i+"-cpu-eth1"
+#         mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict,topo).start_receiving_cpu_packet()
 
     
 

@@ -49,9 +49,9 @@ for i in list(zip(switch,host)):
 
 net.setP4SourceAll('simple-switch.p4')
 net.setP4Source("s00309",'controller-switch.p4')
-# net.setP4Source("s00303",'controller-switch.p4')
-# net.setP4Source("s00803",'controller-switch.p4')
-# net.setP4Source("s00809",'controller-switch.p4')
+net.setP4Source("s00303",'controller-switch.p4')
+net.setP4Source("s00803",'controller-switch.p4')
+net.setP4Source("s00809",'controller-switch.p4')
 
 for index,row in result.iterrows():
     satellite = row['satellite']
