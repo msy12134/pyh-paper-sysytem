@@ -38,6 +38,10 @@ class mycontroller:
             print(self.topo.get_host_name(dict["dst_addr"]))
             if 's'+self.topo.get_host_name(dict["dst_addr"])[1:] not in self.deviceid_switchname_dict:
                 print(f"该目的ipv4地址超出了自治域范围")
+                """
+                这部分用来向后端服务发送请求，模拟自治域在遇到未知情况时向地面中心询问消息
+
+                """
             else:
                 hostname=self.topo.get_host_name(str(dict["dst_addr"]))
                 route=self.topo.get_shortest_paths_between_nodes(switch_name,hostname)[0]#('s1','s2','s3','h1')
