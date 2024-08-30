@@ -40,11 +40,14 @@ class mycontroller:
                 print(f"该目的ipv4地址超出了自治域范围")
             else:
                 hostname=self.topo.get_host_name(str(dict["dst_addr"]))
-                route=self.topo.get_shortest_paths_between_nodes(switch_name,hostname)[0]
-                port=self.topo.node_to_node_port_num(route[0],route[1])
-                ipv4dst=self.topo.get_host_ip('h'+switch_name[1:])
-                mac=self.topo.node_to_node_mac(route[1],route[0])
-                response=deal_packet.make_a_response_packet(int(dict["deviceid"]),str(dict["dst_addr"]),int(port),mac,str(ipv4dst))
-                sendp(response,iface=self.sniff_port)
-
+                route=self.topo.get_shortest_paths_between_nodes(switch_name,hostname)[0]#('s1','s2','s3','h1')
+                for i in range(len(route)-1):
+                    port=self.topo.node_to_node_port_num(route[i],route[i+1])
+                    ipv4dst=self.topo.get_host_ip('h'+route[i][1:])
+                    mac=self.topo.node_to_node_mac(route[i+1],route[i])
+                    deviceid=int(self.deviceid_switchname_dict[route[i]])
+                    dst_addr=str(self.topo.get_host_ip(route[-1]))
+                    response=deal_packet.make_a_response_packet(int(deviceid),dst_addr,int(port),mac,str(ipv4dst))
+                    sendp(response,iface=self.sniff_port)
+                
     
