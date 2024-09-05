@@ -58,11 +58,11 @@ for i in switch_to_deviceID_dict:
 for i in controller_dict:
     sniff_port_name=i+"-cpu-eth1"
     if i in domain_1:
-        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict_domain_1,topo).start_receiving_cpu_packet()
+        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict_domain_1,topo,1).start_receiving_cpu_packet()
     if i in domain_2:
-        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict_domain_2,topo).start_receiving_cpu_packet()
+        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict_domain_2,topo,2).start_receiving_cpu_packet()
     if i in domain_3:
-        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict_domain_3,topo).start_receiving_cpu_packet()
+        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict_domain_3,topo,3).start_receiving_cpu_packet()
     if i in domain_4:
-        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict_domain_4,topo).start_receiving_cpu_packet()
+        mycontroller(sniff_port_name,controller_dict[i],switch_to_deviceID_dict_domain_4,topo,4).start_receiving_cpu_packet()
     

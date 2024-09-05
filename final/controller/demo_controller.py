@@ -5,12 +5,14 @@ from scapy.layers.inet import IP
 from scapy.all import sendp
 from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
 from p4utils.utils.topology import NetworkGraph
+import requests
 class mycontroller:
-    def __init__(self,sniff_port:str,controller:SimpleSwitchThriftAPI,deviceid_switchname_dict:dict,topo:NetworkGraph):
+    def __init__(self,sniff_port:str,controller:SimpleSwitchThriftAPI,deviceid_switchname_dict:dict,topo:NetworkGraph,domainid:int):
         self.sniff_port=sniff_port
         self.controller=controller
         self.deviceid_switchname_dict=deviceid_switchname_dict
         self.topo=topo
+        self.domainid=domainid
     def start_receiving_cpu_packet(self):
         sniff_thread=threading.Thread(target=self.__sniff_packet)
         sniff_thread.start()
@@ -37,11 +39,19 @@ class mycontroller:
                     break
             print(self.topo.get_host_name(dict["dst_addr"]))
             if 's'+self.topo.get_host_name(dict["dst_addr"])[1:] not in self.deviceid_switchname_dict:
-                print(f"该目的ipv4地址超出了自治域范围")
+                print(f"该目的ipv4地址超出了自治域范围,向OCC询问信息")
                 """
-                这部分用来向后端服务发送请求，模拟自治域在遇到未知情况时向地面中心询问消息
-
+                第一种情况：
+                如果单纯就是涉及到了跨域的通信，控制器向OCC构造一个请求获取流表信息，控制器将接收到的流表信息推送给对应的交换机，从而实现跨域通信
+                第二种情况：
+                预缓存就先不在这里写了，到时候直接写个命令行程序去调后端的服务就行
                 """
+                response=requests.get(f"http://127.0.0.1:8000/{self.domainid}/from/{dict['deviceid']}/to/{dict['dst_addr']}")
+                table_info_for_each_switch=response.json()
+                print(f"接收到的OCC响应信息如下：{table_info_for_each_switch}")
+                for i in table_info_for_each_switch:
+                    response_packet=deal_packet.make_a_response_packet(**table_info_for_each_switch[i])
+                    sendp(response_packet,iface=self.sniff_port)
             else:
                 hostname=self.topo.get_host_name(str(dict["dst_addr"]))
                 route=self.topo.get_shortest_paths_between_nodes(switch_name,hostname)[0]#('s1','s2','s3','h1')
