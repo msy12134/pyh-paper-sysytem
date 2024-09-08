@@ -6,6 +6,8 @@ from scapy.all import sendp
 from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
 from p4utils.utils.topology import NetworkGraph
 import requests
+import websockets
+import asyncio
 class mycontroller:
     def __init__(self,sniff_port:str,controller:SimpleSwitchThriftAPI,deviceid_switchname_dict:dict,topo:NetworkGraph,domainid:int):
         self.sniff_port=sniff_port
@@ -63,5 +65,13 @@ class mycontroller:
                     dst_addr=str(self.topo.get_host_ip(route[-1]))
                     response=deal_packet.make_a_response_packet(int(deviceid),dst_addr,int(port),mac,str(ipv4dst))
                     sendp(response,iface=self.sniff_port)
-                
+    async def websocket_client(self):
+        url = "ws://localhost:8000/ws/1"
+        while True:
+            async with websockets.connect(url) as websocket:
+                await websocket.send("hello server")
+                response=await websocket.recv()  
+                print(f"receive from server {response}")
+
+              
     

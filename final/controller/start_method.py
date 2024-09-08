@@ -99,11 +99,8 @@ def make_every_switch_have_its_own_deviceID(controller_dict:dict):
     for i in controller_dict:
         result=controller_dict[i].table_add('set_deviceid','set_deviceid_in_request',["0x0800"],[str(deviceID)])
         controller_dict[i].table_add('if_the_deviceid_hit','ipv4_forward',[str(deviceID)],['00:00:00:00:00:00',"255"])
-        if type(result) is int:
-            switchname_to_deveiceID_dict[i]=deviceID
-            deviceID+=1
-        else:
-            pass
+        switchname_to_deveiceID_dict[i]=deviceID
+        deviceID+=1
     return switchname_to_deveiceID_dict
 
 
