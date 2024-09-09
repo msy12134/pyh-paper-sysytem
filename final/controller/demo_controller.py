@@ -1,3 +1,4 @@
+import aioconsole.console
 from scapy.all import sniff,Packet
 import threading
 import deal_packet
@@ -6,15 +7,16 @@ from scapy.all import sendp
 from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
 from p4utils.utils.topology import NetworkGraph
 import requests
+import aioconsole
 import websockets
-import asyncio
 class mycontroller:
-    def __init__(self,sniff_port:str,controller:SimpleSwitchThriftAPI,deviceid_switchname_dict:dict,topo:NetworkGraph,domainid:int):
+    def __init__(self,sniff_port:str,controller:SimpleSwitchThriftAPI,deviceid_switchname_dict:dict,topo:NetworkGraph,domainid:int,websocket:websockets =None):
         self.sniff_port=sniff_port
         self.controller=controller
         self.deviceid_switchname_dict=deviceid_switchname_dict
         self.topo=topo
         self.domainid=domainid
+        self.websocket=websocket
     def start_receiving_cpu_packet(self):
         sniff_thread=threading.Thread(target=self.__sniff_packet)
         sniff_thread.start()
@@ -65,13 +67,7 @@ class mycontroller:
                     dst_addr=str(self.topo.get_host_ip(route[-1]))
                     response=deal_packet.make_a_response_packet(int(deviceid),dst_addr,int(port),mac,str(ipv4dst))
                     sendp(response,iface=self.sniff_port)
-    async def websocket_client(self):
-        url = "ws://localhost:8000/ws/1"
-        while True:
-            async with websockets.connect(url) as websocket:
-                await websocket.send("hello server")
-                response=await websocket.recv()  
-                print(f"receive from server {response}")
+    
 
               
     

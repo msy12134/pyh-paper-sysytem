@@ -1,9 +1,12 @@
+import multiprocessing.queues
 from fastapi import FastAPI,WebSocket
 from ipaddress import IPv4Address
 from p4utils.utils.topology import NetworkGraph
 from p4utils.utils.helper import load_topo
 import uvicorn
 from typing import Dict
+import multiprocessing
+from typing import List
 each_switch_and_its_switchid_dict={'s00101': 1, 's00102': 2, 's00103': 3, 's00104': 4, 's00105': 5, 's00106': 6, 's00107': 7, 's00108': 8, 's00109': 9, 's00110': 10, 
                          's00111': 11, 's00112': 12, 's00201': 13, 's00202': 14, 's00203': 15, 's00204': 16, 's00205': 17, 's00206': 18, 's00207': 19, 's00208': 20, 
                          's00209': 21, 's00210': 22, 's00211': 23, 's00212': 24, 's00301': 25, 's00302': 26, 's00303': 27, 's00304': 28, 's00305': 29, 's00306': 30, 
@@ -58,12 +61,43 @@ def query_the_path_info(domainid:str,deviceid:int,ip_address:IPv4Address):
     return {key:value for key,value in table_entry_for_each_switch.items() if key in domain_dict[domainid]}
 
 
+def calculate_other_switch_to_hot_switch(hotswitch:str,other:List[str],q:multiprocessing.Queue): #每个域内计算出到热点交换机的路径，放入队列中
+    for i in other:
+        q.put(topo.get_shortest_paths_between_nodes(i,hotswitch)[0])
+
+
 connected_clients: Dict[str, WebSocket] = {}
 @app.websocket("/ws/{domainid}")
 async def websocket(websocket:WebSocket,domainid:str):
     await websocket.accept()
     connected_clients[domainid] = websocket
     print(connected_clients)
+    data=await websocket.receive_text() #data应该就是某个域内交换机的名称
+    print(f"receive data :{data} is going to be hot ")
+    the_three_remain_domain_dict=domain_dict
+    for i in domain_dict:
+        if data in domain_dict[i]:
+            delete_key=i
+            break
+    print(f"这个交换机来自域{delete_key}")
+    del the_three_remain_domain_dict[delete_key]
+    queue_dict:Dict[str,multiprocessing.Queue]={}
+    for i in the_three_remain_domain_dict:
+        q = multiprocessing.Queue()
+        queue_dict[i] = q #每个域的存储结果都会在自己的队列中
+    print(queue_dict)
+    process=[]
+    for i in the_three_remain_domain_dict:
+        p=multiprocessing.Process(target=calculate_other_switch_to_hot_switch,args=(data,the_three_remain_domain_dict[i],queue_dict[i]))
+        process.append(p)
+        p.start()
+    for p in process:
+        p.join()
+    number=0
+    for i in queue_dict:
+        while not queue_dict[i].empty():
+            print(queue_dict[i].get())
+            number+=1
+    print(number)
 if __name__=="__main__":
     uvicorn.run(app)
-    
