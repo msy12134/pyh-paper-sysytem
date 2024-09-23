@@ -1,3 +1,4 @@
+
 import time
 from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP
@@ -9,5 +10,5 @@ while True:
 
 	# 创建以太网头部和IPv4头部，并将时间戳作为载荷
 
-	pkt = Ether(src=get_if_hwaddr("h00303-eth0"), dst="ff:ff:ff:ff:ff:ff") / IP(dst="10.0.0.101",proto=155) / timestamp
-	sendp(pkt,iface="h00303-eth0",count=1)
+	pkt = Ether(src=get_if_hwaddr("h00803-eth0"), dst="ff:ff:ff:ff:ff:ff") / IP(dst="10.0.3.35",proto=155) / timestamp
+	sendp(pkt,iface="h00803-eth0",count=1)
